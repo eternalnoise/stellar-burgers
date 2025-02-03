@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect, FC } from 'react';
 import { useInView } from 'react-intersection-observer';
-
+import { useSelector } from 'react-redux';
 import { TTabMode } from '@utils-types';
 import { BurgerIngredientsUI } from '../ui/burger-ingredients';
+import { selectIngredients } from '../../services/selectors/ingredients';
+import { useDispatch } from '../../services/store/store';
+import { fetchIngredients } from '../../services/slices/ingredients-slice';
+import { LoadingSpinner } from '../loading-spinner';
 
 export const BurgerIngredients: FC = () => {
-  /** TODO: взять переменные из стора */
-  const buns = [];
-  const mains = [];
-  const sauces = [];
-
+  const dispatch = useDispatch();
+  const { ingredients, loading, error } = useSelector(selectIngredients);
   const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
   const titleBunRef = useRef<HTMLHeadingElement>(null);
   const titleMainRef = useRef<HTMLHeadingElement>(null);
@@ -27,6 +28,12 @@ export const BurgerIngredients: FC = () => {
     threshold: 0
   });
 
+  /* 
+  useEffect(() => {
+    dispatch(fetchIngredients());
+  }, [dispatch]);
+  */
+
   useEffect(() => {
     if (inViewBuns) {
       setCurrentTab('bun');
@@ -36,6 +43,13 @@ export const BurgerIngredients: FC = () => {
       setCurrentTab('main');
     }
   }, [inViewBuns, inViewFilling, inViewSauces]);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <div>Error: {error}</div>;
+
+  const bun = ingredients.filter((item) => item.type === 'bun');
+  const mains = ingredients.filter((item) => item.type === 'main');
+  const sauces = ingredients.filter((item) => item.type === 'sauce');
 
   const onTabClick = (tab: string) => {
     setCurrentTab(tab as TTabMode);
@@ -47,12 +61,10 @@ export const BurgerIngredients: FC = () => {
       titleSaucesRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  return null;
-
   return (
     <BurgerIngredientsUI
       currentTab={currentTab}
-      buns={buns}
+      bun={bun}
       mains={mains}
       sauces={sauces}
       titleBunRef={titleBunRef}

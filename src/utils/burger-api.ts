@@ -30,7 +30,7 @@ export const refreshToken = (): Promise<TRefreshResponse> =>
       if (!refreshData.success) {
         return Promise.reject(refreshData);
       }
-      localStorage.setItem('refreshToken', refreshData.refreshToken);
+      setCookie('refreshToken', refreshData.refreshToken);
       setCookie('accessToken', refreshData.accessToken);
       return refreshData;
     });
@@ -71,12 +71,12 @@ type TOrdersResponse = TServerResponse<{
   data: TOrder[];
 }>;
 
-export const getIngredientsApi = () =>
+export const getIngredientsApi = (): Promise<TIngredient[]> =>
   fetch(`${URL}/ingredients`)
     .then((res) => checkResponse<TIngredientsResponse>(res))
     .then((data) => {
-      if (data?.success) return data.data;
-      return Promise.reject(data);
+      if (!data?.success) throw new Error('Failed to fetch ingredients');
+      return data.data;
     });
 
 export const getFeedsApi = () =>
