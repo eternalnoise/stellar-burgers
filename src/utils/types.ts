@@ -44,4 +44,10 @@ export interface UserState {
   isAuthenticated: boolean;
 }
 
+export type TProfileFormValue = {
+  name: string;
+  email: string;
+  password: string;
+};
+
 export type TTabMode = 'bun' | 'sauce' | 'main';

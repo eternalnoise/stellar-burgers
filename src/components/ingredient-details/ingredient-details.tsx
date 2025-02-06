@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Preloader } from '../ui/preloader';
 import { IngredientDetailsUI } from '../ui/ingredient-details';
@@ -14,9 +14,11 @@ import {
 
 export const IngredientDetails: FC = () => {
   const { id } = useParams();
+  const ingredients = useSelector((state) => state.ingredients.items);
   const dispatch = useDispatch();
-  const selectedIngredient = useSelector(
-    (state: RootState) => state.ingredients.selectedIngredient
+  const selectedIngredient = useMemo(
+    () => ingredients.find((x) => x._id === id),
+    [ingredients, id]
   );
 
   useEffect(() => {

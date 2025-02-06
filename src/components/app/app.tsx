@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import {
   ConstructorPage,
   Feed,
@@ -19,8 +20,11 @@ import {
 import '../../index.css';
 import styles from './app.module.css';
 import { AppHeader } from '@components';
-import { useDispatch } from '../../services/store/store';
+import { useDispatch, useSelector } from '../../services/store/store';
 import { setSelectedIngredient } from '../../services/slices/ingredients-slice';
+import { fetchUser } from '../../services/slices/user-slice';
+import { fetchIngredients } from '../../services/slices/ingredients-slice';
+import { Preloader } from '@ui';
 
 const App = () => {
   const location = useLocation();
@@ -28,13 +32,54 @@ const App = () => {
   const background = location.state?.background;
   const dispatch = useDispatch();
 
-  const handleModalClose = () => {
-    navigate(-1);
+  const isModalRoute =
+    location.pathname.includes('/ingredients/') ||
+    location.pathname.includes('/feed/') ||
+    location.pathname.includes('/profile/orders/');
+
+  const ingredients = useSelector((state) => state.ingredients.items);
+  useEffect(() => {
+    if (ingredients.length === 0) {
+      dispatch(fetchIngredients());
+    }
+  }, [dispatch, ingredients.length]);
+
+  // меняем background на путь до родительского маршрута
+  useEffect(() => {
+    const handleModalRoute = async () => {
+      if (isModalRoute) {
+        const pathSegments = location.pathname.split('/');
+        const number = pathSegments.pop();
+        const backgroundPath = pathSegments.join('/');
+
+        if (location.pathname.includes('ingredients')) {
+          navigate(location.pathname, {
+            state: { background: '/' },
+            replace: true
+          });
+        } else {
+          navigate(location.pathname, {
+            state: { background: backgroundPath || '/' },
+            replace: true
+          });
+        }
+      }
+    };
+
+    handleModalRoute();
+  }, [location.pathname, background, isModalRoute, navigate]);
+
+  useEffect(() => {
+    dispatch(fetchUser());
+  }, [dispatch]);
+
+  const handleFeedModalClose = () => {
+    navigate('/feed');
   };
 
   const handleingredientModalClose = () => {
     dispatch(setSelectedIngredient(null));
-    navigate(-1);
+    navigate('/');
   };
 
   const handleProfileOrderModalClose = () => {
@@ -44,7 +89,7 @@ const App = () => {
   return (
     <div className={styles.app}>
       <AppHeader />
-      <Routes location={background || location}>
+      <Routes location={background || (isModalRoute ? '/' : location)}>
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
         <Route path='/login' element={<Login />} />
@@ -71,7 +116,7 @@ const App = () => {
         <Route path='*' element={<NotFound404 />} />
       </Routes>
 
-      {background && (
+      {(background || isModalRoute) && (
         <Routes>
           <Route
             path='/ingredients/:id'
@@ -89,7 +134,7 @@ const App = () => {
             element={
               <Modal
                 title={`#${location.pathname.split('/').pop()}`}
-                onClose={handleModalClose}
+                onClose={handleFeedModalClose}
               >
                 <OrderInfo />
               </Modal>
