@@ -4,13 +4,22 @@ import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
 import { useSelector, useDispatch } from '../../services/store/store';
 import { useParams } from 'react-router-dom';
+import { fetchAllOrders } from '../../services/slices/all-orders-slice';
 import { fetchUserOrders } from '../../services/slices/user-orders-slice';
 
 export const OrderInfo: FC = () => {
+  // поскольку компонент рендерится как для заказов из общей ленты, так и пользовательских, загружаем все заказы
+  const { allOrders } = useSelector((state) => state.allOrders);
   const { userOrders } = useSelector((state) => state.userOrders);
   const { items: ingredients } = useSelector((state) => state.ingredients);
   const dispatch = useDispatch();
   const { number } = useParams<{ number: string }>();
+
+  useEffect(() => {
+    if (allOrders.length === 0) {
+      dispatch(fetchAllOrders());
+    }
+  }, [dispatch, allOrders.length]);
 
   useEffect(() => {
     if (userOrders.length === 0) {
@@ -18,9 +27,13 @@ export const OrderInfo: FC = () => {
     }
   }, [dispatch, userOrders.length]);
 
+  // в allOrders может не быть нужного заказа, поскольку там только n последних, поэтому будем искать и там, и там
   const orderData = useMemo(
-    () => userOrders.find((order) => order.number === Number(number)),
-    [userOrders, number]
+    () =>
+      [...allOrders, ...userOrders].find(
+        (order) => order.number === Number(number)
+      ),
+    [allOrders, userOrders, number]
   );
 
   /* Готовим данные для отображения */

@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect, FC } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { useSelector } from 'react-redux';
+import { useSelector } from '../../services/store/store';
 import { TTabMode } from '@utils-types';
 import { BurgerIngredientsUI } from '../ui/burger-ingredients';
-import { selectIngredients } from '../../services/selectors/ingredients';
 import { useDispatch } from '../../services/store/store';
 import { fetchIngredients } from '../../services/slices/ingredients-slice';
 import { LoadingSpinner } from '../loading-spinner';
 
 export const BurgerIngredients: FC = () => {
   const dispatch = useDispatch();
-  const { ingredients, loading, error } = useSelector(selectIngredients);
+  const { ingredients, loading, error } = useSelector((state) => ({
+    ingredients: state.ingredients.items,
+    loading: state.loading,
+    error: state.error
+  }));
   const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
   const titleBunRef = useRef<HTMLHeadingElement>(null);
   const titleMainRef = useRef<HTMLHeadingElement>(null);

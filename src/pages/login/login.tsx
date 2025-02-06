@@ -1,9 +1,12 @@
-import { FC, SyntheticEvent, useState } from 'react';
+import { FC, SyntheticEvent, FormEvent, useState } from 'react';
 import { LoginUI } from '@ui-pages';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { login } from '../../utils/auth';
 import { useDispatch } from '../../services/store/store';
 import { setAuthenticated, fetchUser } from '../../services/slices/user-slice';
+import { useEffect } from 'react';
+import { useSelector } from '../../services/store/store';
+import { Preloader } from '@ui';
 
 export const Login: FC = () => {
   const [email, setEmail] = useState('');
@@ -11,8 +14,15 @@ export const Login: FC = () => {
   const [errorText, setErrorText] = useState('');
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+  const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
+  const isLoading = useSelector((state) => state.loading);
 
-  const handleSubmit = async (e: SyntheticEvent) => {
+  useEffect(() => {
+    dispatch(fetchUser()); // fetchUser проверяет accessToken и записывает юзера в стейт
+  }, [dispatch]);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorText('');
 
@@ -20,21 +30,32 @@ export const Login: FC = () => {
     if (success) {
       dispatch(setAuthenticated(true));
       await dispatch(fetchUser()).unwrap(); // записывает юзера в стейт
-      navigate('/');
+
+      // перенаправление на страницу, с которой пришел пользователь
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
     } else {
       dispatch(setAuthenticated(false));
       setErrorText(error || 'Error logging in');
     }
   };
 
-  return (
-    <LoginUI
-      errorText={errorText}
-      email={email}
-      setEmail={setEmail}
-      password={password}
-      setPassword={setPassword}
-      handleSubmit={handleSubmit}
-    />
-  );
+  if (isLoading) {
+    return <Preloader />;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to='/profile' replace />;
+  } else {
+    return (
+      <LoginUI
+        errorText={errorText}
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        handleSubmit={handleSubmit}
+      />
+    );
+  }
 };

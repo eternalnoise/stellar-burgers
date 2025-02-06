@@ -39,9 +39,9 @@ const store = configureStore({
     })
 });
 
-export type AppDispatch = typeof store.dispatch;
+export type TAppDispatch = typeof store.dispatch;
 
-export const useDispatch: () => AppDispatch = () => dispatchHook();
-export const useSelector: TypedUseSelectorHook<RootState> = selectorHook;
+export const useDispatch = dispatchHook.withTypes<TAppDispatch>();
+export const useSelector = selectorHook.withTypes<RootState>();
 
 export default store;

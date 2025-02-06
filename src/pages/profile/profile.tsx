@@ -24,13 +24,11 @@ export const Profile: FC = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log('formValue', formValue);
     setIsFormChanged(
       formValue.name !== user?.name ||
         formValue.email !== user?.email ||
         !!formValue.password
     );
-    console.log('isFormChanged', isFormChanged);
   }, [formValue, user]);
 
   const handleSubmit = (e: SyntheticEvent) => {
