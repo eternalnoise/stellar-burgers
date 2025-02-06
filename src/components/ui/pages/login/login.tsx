@@ -7,6 +7,7 @@ import {
 import styles from '../common.module.css';
 import { Link } from 'react-router-dom';
 import { LoginUIProps } from './type';
+import { FormEvent } from 'react';
 
 export const LoginUI: FC<LoginUIProps> = ({
   email,
@@ -35,6 +36,7 @@ export const LoginUI: FC<LoginUIProps> = ({
               error={false}
               errorText=''
               size='default'
+              autoComplete='email'
             />
           </div>
           <div className='pb-6'>
@@ -42,6 +44,7 @@ export const LoginUI: FC<LoginUIProps> = ({
               onChange={(e) => setPassword(e.target.value)}
               value={password}
               name='password'
+              autoComplete='password'
             />
           </div>
           <div className={`pb-6 ${styles.button}`}>

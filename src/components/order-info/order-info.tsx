@@ -1,21 +1,40 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useEffect } from 'react';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
+import { useSelector, useDispatch } from '../../services/store/store';
+import { useParams } from 'react-router-dom';
+import { fetchAllOrders } from '../../services/slices/all-orders-slice';
+import { fetchUserOrders } from '../../services/slices/user-orders-slice';
 
 export const OrderInfo: FC = () => {
-  /** TODO: взять переменные orderData и ingredients из стора */
-  const orderData = {
-    createdAt: '',
-    ingredients: [],
-    _id: '',
-    status: '',
-    name: '',
-    updatedAt: 'string',
-    number: 0
-  };
+  // поскольку компонент рендерится как для заказов из общей ленты, так и пользовательских, загружаем все заказы
+  const { allOrders } = useSelector((state) => state.allOrders);
+  const { userOrders } = useSelector((state) => state.userOrders);
+  const { items: ingredients } = useSelector((state) => state.ingredients);
+  const dispatch = useDispatch();
+  const { number } = useParams<{ number: string }>();
 
-  const ingredients: TIngredient[] = [];
+  useEffect(() => {
+    if (allOrders.length === 0) {
+      dispatch(fetchAllOrders());
+    }
+  }, [dispatch, allOrders.length]);
+
+  useEffect(() => {
+    if (userOrders.length === 0) {
+      dispatch(fetchUserOrders());
+    }
+  }, [dispatch, userOrders.length]);
+
+  // в allOrders может не быть нужного заказа, поскольку там только n последних, поэтому будем искать и там, и там
+  const orderData = useMemo(
+    () =>
+      [...allOrders, ...userOrders].find(
+        (order) => order.number === Number(number)
+      ),
+    [allOrders, userOrders, number]
+  );
 
   /* Готовим данные для отображения */
   const orderInfo = useMemo(() => {
