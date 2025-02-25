@@ -30,10 +30,12 @@ export const updateUser = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk('user/logoutUser', async () => {
-  await logoutApi();
-  deleteCookie('refreshToken');
-  deleteCookie('accessToken');
-  window.location.href = '/login';
+  const response = await logoutApi();
+  if (response.success) {
+    deleteCookie('refreshToken');
+    deleteCookie('accessToken');
+  }
+  return response.success;
 });
 
 const userSlice = createSlice({
@@ -76,6 +78,14 @@ const userSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
         state.loading = false;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to logout';
+      })
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
         state.error = null;
       });
   }
